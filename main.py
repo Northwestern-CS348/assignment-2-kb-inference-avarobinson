@@ -2,6 +2,7 @@ import unittest
 import read, copy
 from logical_classes import *
 from student_code import KnowledgeBase
+import pdb
 
 class KBTest(unittest.TestCase):
 
@@ -14,7 +15,11 @@ class KBTest(unittest.TestCase):
         for item in data:
             if isinstance(item, Fact) or isinstance(item, Rule):
                 self.KB.kb_assert(item)
-        
+        file = 'statements_kb5.txt'
+        data = read.read_tokenize(file)
+        for item in data:
+            if isinstance(item, Fact) or isinstance(item, Rule):
+                self.KB.kb_assert(item)
     def test1(self):
         # Did the student code contain syntax errors, AttributeError, etc.
         ask1 = read.parse_input("fact: (motherof ada ?X)")
@@ -70,6 +75,123 @@ class KBTest(unittest.TestCase):
         print(' Asking if', ask1)
         answer = self.KB.kb_ask(ask1)
         self.assertEqual(str(answer[0]), "?X : bing")
+
+    def test6(self):
+        # makes sure retract does not retract supported fact
+        ask1 = read.parse_input("fact: (grandparent A ?X)")
+        print(' Asking if', ask1)
+        answer = self.KB.kb_ask(ask1)
+        self.assertEqual(str(answer[0]), "?X : C")
+        # self.assertEqual(str(answer[1]), "?X : chen")
+
+        r1 = read.parse_input("fact: (parent B C)")
+        print(' Retracting', r1)
+        self.KB.kb_retract(r1)
+
+        print(' Asking if', ask1)
+        answer = self.KB.kb_ask(ask1)
+        self.assertEqual(str(answer[0]), "?X : C")
+
+        r1 = read.parse_input("fact: (parent A D)")
+        print(' Retracting', r1)
+        self.KB.kb_retract(r1)
+
+        print(' Asking if', ask1)
+        answer = self.KB.kb_ask(ask1)
+        print(str(len(answer)))
+        self.assertEqual(len(answer), 0)
+
+    def test7(self):
+        """this student generated test ensures retract only removes facts and rules that are supported by
+        1 or less fact-rule pairs
+        """
+        r1 = read.parse_input("fact: (dresslike profHammond TonyStark)")
+        print(' Retracting', r1)
+        self.KB.kb_retract(r1)
+        ask1 = read.parse_input("fact: (isliterally ?X TonyStark)")
+        print(' Asking if', ask1)
+        answer = self.KB.kb_ask(ask1)
+        self.assertEqual(str(answer[0]), "?X : profHammond")
+        ask2 = read.parse_input("fact: (resembles profHammond ?Y)")
+        print(' Asking if', ask2)
+        answer = self.KB.kb_ask(ask2)
+        self.assertFalse(answer)
+
+    def test8(self):
+        """this student generated test ensures retracting the 2nd fact in the lhs of a rule
+        successfully retracts the final inferred fact but re-assertion re-infers the fact
+        """
+        r1 = read.parse_input("fact: (lookslike profHammond TonyStark)")
+        print(' Retracting', r1)
+        self.KB.kb_retract(r1)
+        ask1 = read.parse_input("fact: (resembles profHammond ?Y)")
+        print(' Asking if', ask1)
+        answer = self.KB.kb_ask(ask1)
+        self.assertFalse(answer)
+        a1 = read.parse_input("fact: (lookslike profHammond TonyStark)")
+        print(' Reasserting', a1)
+        self.KB.kb_assert(a1)
+        ask2 = read.parse_input("fact: (resembles profHammond ?Y)")
+        print(' Asking if', ask2)
+        answer = self.KB.kb_ask(ask2)
+        self.assertEqual(str(answer[0]), "?Y : TonyStark")
+
+    def test9(self):
+        """this student generated test ensures retracting a fact that supports inferences 2 links away
+        also retracts all facts down that chain
+        """
+        r1 = read.parse_input("fact: (techgenius profHammond)")
+        print(' Retracting', r1)
+        self.KB.kb_retract(r1)
+        r2 = read.parse_input("fact: (talkslike profHammond TonyStark)")
+        print(' Retracting', r2)
+        self.KB.kb_retract(r2)
+        ask1 = read.parse_input("fact: (isliterally ?X TonyStark)")
+        print(' Asking if', ask1)
+        answer = self.KB.kb_ask(ask1)
+        self.assertFalse(answer)
+        ask2 = read.parse_input("fact: (IronMan ?X)")
+        print(' Asking if', ask2)
+        answer = self.KB.kb_ask(ask2)
+        self.assertFalse(answer)
+        ask3 = read.parse_input("fact: (Avenger ?X)")
+        print(' Asking if', ask3)
+        answer = self.KB.kb_ask(ask3)
+        self.assertFalse(answer)
+
+    def test10(self):
+        """this student generated test ensures retracting a fact that supports two or more facts or rules
+        successfully retracts all inferred facts and rules
+        """
+        r1 = read.parse_input("fact: (techgenius profHammond)")
+        print(' Retracting', r1)
+        self.KB.kb_retract(r1)
+        ask1 = read.parse_input("fact: (employable ?X)")
+        print(' Asking if', ask1)
+        answer = self.KB.kb_ask(ask1)
+        self.assertFalse(answer)
+        ask2 = read.parse_input("fact: (smart ?X)")
+        print(' Asking if', ask2)
+        answer = self.KB.kb_ask(ask2)
+        self.assertFalse(answer)
+
+    def test11(self):
+        """this student generated test ensures the inference engine is working at a basic level"""
+        ask1 = read.parse_input("fact: (Avenger ?X)")
+        print(' Asking if', ask1)
+        answer = self.KB.kb_ask(ask1)
+        self.assertEqual(str(answer[0]), "?X : profHammond")
+        ask2 = read.parse_input("fact: (smart ?X)")
+        print(' Asking if', ask2)
+        answer = self.KB.kb_ask(ask2)
+        self.assertEqual(str(answer[0]), "?X : profHammond")
+        ask3 = read.parse_input("fact: (employable ?X)")
+        print(' Asking if', ask3)
+        answer = self.KB.kb_ask(ask3)
+        self.assertEqual(str(answer[0]), "?X : profHammond")
+
+#want to test for retracting a fact that is asserted but not supported --> remove
+#test for retracting a rule that is NOT supported but is asserted --> rule
 
 
 def pprint_justification(answer):
