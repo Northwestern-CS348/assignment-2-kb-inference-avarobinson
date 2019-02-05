@@ -126,7 +126,6 @@ class KnowledgeBase(object):
                     self.facts.remove(fact_or_rule)  # removed the fact from list of facts
                 else: #if it is a rule --> remove it from rule list
                     self.rules.remove(fact_or_rule)
-
                 for f in fact_or_rule.supports_facts:  # run through all the facts that removed fact supports
                     for support in f.supported_by: #supported_by is list of list, must search through all of the list in supported_by
                         if fact_or_rule in support:   #if fact_or_rule is in the supports list
