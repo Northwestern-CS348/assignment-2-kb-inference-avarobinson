@@ -193,8 +193,8 @@ class InferenceEngine(object):
                     new_lhs.append(instantiate(left, matches))
                 new_rhs_statement=instantiate(rule.rhs, matches)
                 new_rule=Rule([new_lhs, new_rhs_statement], [[fact, rule]]) #returns new rule
-                fact.supports_rules.append(new_rule)
-                rule.supports_rules.append(new_rule)
                 kb.kb_add(new_rule)
+                fact.supports_rules.append(kb._get_rule(new_rule))
+                rule.supports_rules.append(kb._get_rule(new_rule))
                 #instantiate with the bindings found --> return new statement, store in list that is the new LHS, repeat over all of the LHS other than the first one
 
